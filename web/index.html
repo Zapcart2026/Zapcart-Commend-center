@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zapcart Workspace</title>
+<style>
+:root{
+  --bg:#f6f7f9; --card:#fff; --ink:#111418; --muted:#5b6672; --line:#e3e7ec;
+  --brand:#0b5fff; --brand-ink:#fff; --ok:#0f8a4f; --warn:#b06000; --bad:#c62828;
+  --radius:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1117; --card:#161b22; --ink:#e8edf3; --muted:#9aa7b4; --line:#262d36;
+    --brand:#4d8dff; --brand-ink:#06121f;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1117; --card:#161b22; --ink:#e8edf3; --muted:#9aa7b4; --line:#262d36;
+  --brand:#4d8dff; --brand-ink:#06121f;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-text-size-adjust:100%}
+header{position:sticky;top:0;z-index:5;background:var(--card);
+  border-bottom:1px solid var(--line);padding:12px 16px;
+  padding-top:max(12px,env(safe-area-inset-top))}
+h1{margin:0;font-size:17px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:12px;margin-top:2px}
+nav{display:flex;gap:6px;overflow-x:auto;padding:10px 16px 0;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:0 0 auto;background:transparent;border:1px solid var(--line);
+  color:var(--muted);padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--brand);color:var(--brand-ink);
+  border-color:var(--brand);font-weight:600}
+main{padding:16px;padding-bottom:max(32px,env(safe-area-inset-bottom))}
+section[hidden]{display:none}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px}
+.tile b{display:block;font-size:24px;line-height:1.2;letter-spacing:-.02em}
+.tile span{color:var(--muted);font-size:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px;margin-bottom:10px}
+.card h3{margin:0 0 4px;font-size:15px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:8px}
+.body{white-space:pre-wrap;font-size:14px;margin:8px 0;
+  max-height:220px;overflow:auto;overflow-wrap:anywhere}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);
+  padding:9px 14px;border-radius:10px;font-size:14px;cursor:pointer;text-decoration:none;
+  display:inline-block;min-height:40px;line-height:22px}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:600}
+.btn.bad{color:var(--bad);border-color:var(--bad)}
+.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted)}
+.pill.now{color:var(--bad);border-color:var(--bad)}
+.empty{color:var(--muted);padding:24px 0;text-align:center}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;
+  background:var(--card);color:var(--ink);font:inherit;margin-bottom:8px}
+textarea{min-height:90px;resize:vertical}
+.note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--warn);
+  border-radius:var(--radius);padding:12px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Zapcart Workspace</h1>
+  <div class="sub" id="status">connecting…</div>
+</header>
+
+<nav id="tabs" role="tablist">
+  <button role="tab" data-tab="do" aria-selected="true">Do now</button>
+  <button role="tab" data-tab="chat" aria-selected="false">Chat</button>
+  <button role="tab" data-tab="agents" aria-selected="false">Agents</button>
+  <button role="tab" data-tab="history" aria-selected="false">History</button>
+</nav>
+
+<main>
+  <section id="do">
+    <div class="tiles" id="tiles"></div>
+    <div id="approvals"></div>
+  </section>
+
+  <section id="chat" hidden>
+    <select id="chatAgent"></select>
+    <textarea id="chatMsg" placeholder="Ask an agent something…"></textarea>
+    <button class="btn primary" id="send">Send</button>
+    <div id="chatOut"></div>
+  </section>
+
+  <section id="agents" hidden><div id="agentList"></div></section>
+  <section id="history" hidden><div id="runs"></div></section>
+</main>
+
+<script>
+const qs = new URLSearchParams(location.search);
+let TOKEN = qs.get('t') || localStorage.getItem('zc_token') || '';
+if (qs.get('t')) { try { localStorage.setItem('zc_token', TOKEN); } catch {} }
+
+const el = (t, c, txt) => { const n = document.createElement(t);
+  if (c) n.className = c; if (txt != null) n.textContent = txt; return n; };
+
+async function api(path, opts = {}) {
+  const r = await fetch('/api' + path, {
+    ...opts,
+    headers: { 'content-type': 'application/json', 'x-workspace-token': TOKEN,
+      ...(opts.headers || {}) },
+  });
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.status);
+  return r.json();
+}
+
+document.getElementById('tabs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]'); if (!b) return;
+  for (const t of document.querySelectorAll('nav button'))
+    t.setAttribute('aria-selected', String(t === b));
+  for (const s of document.querySelectorAll('main section'))
+    s.hidden = s.id !== b.dataset.tab;
+  if (b.dataset.tab === 'history') loadRuns();
+});
+
+async function loadSummary() {
+  const s = await api('/summary');
+  const tiles = document.getElementById('tiles');
+  tiles.replaceChildren();
+  const add = (n, label) => { const d = el('div', 'tile');
+    d.append(el('b', null, String(n)), el('span', null, label)); tiles.append(d); };
+  add(s.waiting, 'waiting on you');
+  add(s.openQuotes, 'open quotes');
+  add(s.openRfqs, 'open RFQs');
+  add(s.companies, 'companies');
+  add(s.runs24h, 'agent runs, 24h');
+  add(s.failed24h, 'runs that failed');
+  document.getElementById('status').textContent =
+    s.schedulerOn ? 'agents running' : 'agents idle — SCHEDULER_ENABLED is 0';
+}
+
+async function loadApprovals() {
+  const list = await api('/approvals');
+  const host = document.getElementById('approvals');
+  host.replaceChildren();
+  if (!list.length) {
+    host.append(el('p', 'empty', 'Nothing is waiting on you right now.'));
+    return;
+  }
+  for (const a of list) {
+    const c = el('div', 'card');
+    const p = el('span', 'pill' + (a.priority === 'Do now' ? ' now' : ''), a.priority);
+    c.append(p, el('h3', null, a.title),
+      el('div', 'meta', [a.agent, a.recipient, a.created_at].filter(Boolean).join(' · ')));
+    if (a.body) c.append(el('div', 'body', a.body));
+    const row = el('div', 'row');
+    if (a.open_url) {
+      const link = el('a', 'btn primary', 'Open');
+      link.href = a.open_url; link.target = '_blank'; link.rel = 'noopener';
+      row.append(link);
+    }
+    const yes = el('button', 'btn primary', 'Approve');
+    yes.onclick = () => decide(a.id, 'approved');
+    const no = el('button', 'btn bad', 'Reject');
+    no.onclick = () => decide(a.id, 'rejected');
+    row.append(yes, no);
+    c.append(row);
+    host.append(c);
+  }
+}
+
+async function decide(id, decision) {
+  await api(`/approvals/${id}/${decision}`, { method: 'POST' });
+  await Promise.all([loadApprovals(), loadSummary()]);
+}
+
+async function loadAgents() {
+  const list = await api('/agents');
+  const sel = document.getElementById('chatAgent');
+  sel.replaceChildren();
+  const host = document.getElementById('agentList');
+  host.replaceChildren();
+  for (const a of list) {
+    const o = el('option', null, a.name); o.value = a.id; sel.append(o);
+    const c = el('div', 'card');
+    c.append(el('h3', null, a.name), el('div', 'meta',
+      `${a.provider === 'openai' ? 'OpenAI' : 'Claude'} · ` +
+      (a.everyMinutes ? `every ${a.everyMinutes} min` : 'on request only')));
+    host.append(c);
+  }
+}
+
+document.getElementById('send').onclick = async () => {
+  const msg = document.getElementById('chatMsg').value.trim();
+  if (!msg) return;
+  const agent = document.getElementById('chatAgent').value;
+  const out = document.getElementById('chatOut');
+  out.replaceChildren(el('div', 'card', 'Thinking…'));
+  try {
+    const r = await api('/chat', { method: 'POST',
+      body: JSON.stringify({ agent, message: msg }) });
+    const c = el('div', 'card');
+    c.append(el('h3', null, agent), el('div', 'body', r.text));
+    out.replaceChildren(c);
+    loadApprovals();
+  } catch (e) {
+    out.replaceChildren(el('div', 'note', String(e.message)));
+  }
+};
+
+async function loadRuns() {
+  const runs = await api('/history');
+  const host = document.getElementById('runs');
+  host.replaceChildren();
+  if (!runs.length) { host.append(el('p', 'empty', 'No runs yet.')); return; }
+  for (const r of runs) {
+    const c = el('div', 'card');
+    c.append(el('h3', null, `${r.agent} — ${r.status}`),
+      el('div', 'meta', r.started_at));
+    if (r.summary) c.append(el('div', 'body', r.summary));
+    if (r.error) c.append(el('div', 'note', r.error));
+    host.append(c);
+  }
+}
+
+async function boot() {
+  if (!TOKEN) {
+    document.getElementById('status').textContent =
+      'Add ?t=YOUR_WORKSPACE_TOKEN to the address';
+    return;
+  }
+  try {
+    await Promise.all([loadSummary(), loadApprovals(), loadAgents()]);
+    setInterval(() => { loadSummary(); loadApprovals(); }, 60000);
+  } catch (e) {
+    document.getElementById('status').textContent = 'error: ' + e.message;
+  }
+}
+boot();
+</script>
+</body>
+</html>
