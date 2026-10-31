@@ -56,3 +56,17 @@ Still needed on the PC, in this order:
 3. Sections 1-2 (ChatGPT tasks, chats, GPTs, Agents, Project, Codex: read everything, save to CHATGPT_EXPORT in OneDrive '06 Automation and Bots', merge into MASTER_PLAYBOOK.md and the Command Center database collections ops/merge_map and tasks). Fallback if the browser is unreliable: ChatGPT Settings > Data controls > Export data, then process conversations.json.
 4. Write DONE_REPORT.md. List ChatGPT items for the owner to delete by hand; delete nothing yourself.
 Sections 3, 4 and 6 above are superseded by the cloud dispatcher.
+
+## STATUS 31 Oct 2026, 09:45 Doha (second update) and the remaining LAPTOP steps
+Done in the cloud today: hourly dispatcher verified across 7 runs (digest 08:22 Doha sent), company database (81 docs), Command Center rebuilt with the brand and six live datasets at https://claude.ai/artifact/TX7WQ6z6WKwFNfUSkmctWo, all 66 Codex transcripts copied to OneDrive as `.txt` twins, ChatGPT research-only spec and handoff folder created, Lead Engine and Weekly Work Summary routines disabled again after they were re-enabled at 08:36.
+
+Owner decision recorded: ChatGPT does ONLY customer research and supplier research. Claude does everything else.
+
+Do these on the Windows PC, in this order (each is a few minutes):
+1. Stop the senders. Quit Codex Desktop (Command Center master thread 01a16ffc) or remove every sending job from its `automation.toml`; pause the Claude scheduled task `zapcart-ai-employee-hourly`. Only Farhan may do this (PLAYBOOK rule, 11 Oct 2026).
+2. Install the two ChatGPT tasks from `01 Zapcart Shared Records\06 Automation and Bots\CHATGPT_HANDOFF\CHATGPT_RESEARCH_ONLY_SPEC_2026-10-31.md` (Task A customers, Task B suppliers) and delete or pause every other ChatGPT scheduled task.
+3. Run the Codex digest extractor once (no admin rights needed):
+   `powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Akib shaikh\OneDrive - Zapcart Technology (1)\01 Zapcart Shared Records\06 Automation and Bots\Zapcart AI Employee (Claude)\Extract-CodexDigest.ps1"`
+   It writes one compact digest per Codex thread (all owner and assistant turns) into `06 Automation and Bots\CHATGPT_EXPORT\codex-digests\` and expands the 27 Oct archive zip. Wait for OneDrive green ticks, then tell Claude "digests uploaded". Claude reads them all, merges rules, decisions, contacts and open actions, and returns the chat deletion list. Nothing is deleted before that.
+4. Optional, to let the cloud session use this PC directly: open a terminal in the OneDrive folder and run `claude remote-control`, then tell Claude the folder is live.
+5. Disk cleanup (section 0 above) stays a laptop job.
