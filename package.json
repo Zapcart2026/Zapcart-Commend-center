@@ -1,0 +1,16 @@
+{
+  "name": "zapcart-ai-workspace",
+  "version": "1.0.0",
+  "description": "Zapcart AI Workspace - one dashboard, Claude API for operations, OpenAI API for marketing, one shared database.",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/server.js",
+    "init-db": "node src/db.js --init"
+  },
+  "dependencies": {
+    "better-sqlite3": "11.3.0",
+    "express": "4.21.1"
+  }
+}
