@@ -47,3 +47,12 @@ Open every one of these and read it fully, not just the title:
 - Send as sales@zapcart.qa, reply-all on the last email in the existing thread, never a new chain. Keep Farhan, Subhan and sales@ in CC plus everyone on the client side. Use the Zapcart Sales signature.
 - Skip: quotes past the customer's stated closing date, NVIDIA/GPU threads until export check is clear, threads in active negotiation (reply as a draft instead).
 - Mark a thread replied/closed in the Command Center as soon as it is answered in Outlook.
+
+## STATUS 31 Oct 2026 (read before running)
+Done in the cloud already, do NOT redo: the hourly 24/7 Zapcart Operations Dispatcher (Claude routine, Microsoft 365 connector, Opus 5.5), the company database and Command Center (https://claude.ai/artifact/TX7WQ6z6WKwFNfUSkmctWo), the quote follow-up cadence, the daily 08:20 digest, the Lead Engine merge (disabled), the five old routines (merged and removed). Company profile link is in the database (ops/assets).
+Still needed on the PC, in this order:
+1. Switch OFF the local "zapcart-ai-employee-hourly" task and any other local sender. The cloud dispatcher is the only sender now.
+2. Section 0 (disk cleanup to OneDrive).
+3. Sections 1-2 (ChatGPT tasks, chats, GPTs, Agents, Project, Codex: read everything, save to CHATGPT_EXPORT in OneDrive '06 Automation and Bots', merge into MASTER_PLAYBOOK.md and the Command Center database collections ops/merge_map and tasks). Fallback if the browser is unreliable: ChatGPT Settings > Data controls > Export data, then process conversations.json.
+4. Write DONE_REPORT.md. List ChatGPT items for the owner to delete by hand; delete nothing yourself.
+Sections 3, 4 and 6 above are superseded by the cloud dispatcher.
