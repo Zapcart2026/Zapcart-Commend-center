@@ -40,3 +40,10 @@ Open every one of these and read it fully, not just the title:
 ## 5. Finish
 - Write `COMMAND_CENTER\DONE_REPORT.md`: for each item above, the evidence (file paths, send confirmation, page URL, counts).
 - Do NOT delete ChatGPT tasks or chats. List them for the user to delete by hand.
+
+## 6. Quotation follow-up cadence (standing rule, never stops until answered or closed)
+- Day 0: quote sent. Day 1: first reminder. Day 2: second reminder. Then every 2 days until the customer answers or the lead is marked closed.
+- Before any reminder, check the thread: if the customer replied, or a reminder already went out for that step, do nothing (never two follow-ups for the same quote).
+- Send as sales@zapcart.qa, reply-all on the last email in the existing thread, never a new chain. Keep Farhan, Subhan and sales@ in CC plus everyone on the client side. Use the Zapcart Sales signature.
+- Skip: quotes past the customer's stated closing date, NVIDIA/GPU threads until export check is clear, threads in active negotiation (reply as a draft instead).
+- Mark a thread replied/closed in the Command Center as soon as it is answered in Outlook.
