@@ -1,0 +1,37 @@
+/* Zapcart Technology letterhead — colours sampled from the official template */
+@page { size: A4; }
+:root{
+  --cyan:#30BEE6; --yellow:#F5CE2B; --red:#EB3834; --navy:#16486D;
+  --ink:#16202b; --dim:#54626f; --line:#d3dae1;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font:9.3pt/1.34 "Helvetica Neue",Helvetica,Arial,sans-serif;
+  color:var(--ink);
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+
+
+h1{font-size:14.5pt; letter-spacing:-.01em; margin:0 0 .8mm; color:var(--navy)}
+.lede{font-size:8.2pt; color:var(--dim); margin:0 0 2.6mm}
+h2{font-size:9.6pt; color:var(--navy); margin:3.4mm 0 1mm; text-transform:uppercase; letter-spacing:.05em}
+p{margin:0 0 1.3mm; text-align:justify}
+ol{margin:0; padding-left:5mm}
+ol li{margin-bottom:1.25mm; text-align:justify}
+ol li::marker{font-weight:bold; color:var(--navy)}
+.tight li{margin-bottom:1mm}
+strong{color:var(--ink)}
+.kv{width:100%; border-collapse:collapse; margin:1.6mm 0 2.2mm}
+.kv td,.kv th{border:0.3mm solid var(--line); padding:1.1mm 1.8mm; font-size:8.4pt; vertical-align:top}
+.kv th{background:#eef3f7; text-align:left; font-weight:bold; color:var(--navy); width:34%}
+.fill{display:inline-block; border-bottom:0.3mm solid var(--ink); min-width:46mm}
+.sign{width:100%; border-collapse:collapse; margin-top:2.6mm}
+.sign td{border:0.3mm solid var(--line); padding:2mm; width:50%; vertical-align:top; font-size:8.8pt}
+.sign .hd{background:#eef3f7; font-weight:bold; color:var(--navy); font-size:8.6pt;
+  text-transform:uppercase; letter-spacing:.05em; padding:1.6mm 2.5mm}
+.sigimg{height:25mm; margin:1mm 0 -2mm}
+.ln{display:block; border-bottom:0.3mm solid var(--ink); height:5.5mm; margin-top:1mm}
+.note{background:#f6f9fb; border-left:0.8mm solid var(--cyan); padding:1.6mm 2.2mm; font-size:7.8pt;
+  color:var(--dim); margin:2.2mm 0}
+.avoid{page-break-inside:avoid}

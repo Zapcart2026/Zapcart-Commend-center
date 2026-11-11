@@ -1,0 +1,11 @@
+node_modules/
+.env
+data/
+*.db
+*.db-journal
+
+# business-confidential lists and any data snapshot stay out of the repository
+never_contact.json
+data/
+registers/
+backfill/
