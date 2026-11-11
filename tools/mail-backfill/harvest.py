@@ -47,7 +47,7 @@ for f in sorted(glob.glob(os.path.join(SUB, "agent-*.jsonl"))):
             elif b.get("type") == "tool_result" and b.get("tool_use_id") in calls:
                 inp = calls[b["tool_use_id"]]
                 calls_seen += 1
-                mb = (inp.get("mailboxOwnerEmail") or "farhan@zapcart.qa").split("@")[0].lower()
+                mb = (inp.get("mailboxOwnerEmail") or os.environ.get("OWNER_MAILBOX", "owner")).split("@")[0].lower()
                 folder = (inp.get("folderName") or "").lower() or "all"
                 ck = (mb, folder, inp.get("query") or "", inp.get("sender") or "")
                 ch = chains.setdefault(ck, [0, False])

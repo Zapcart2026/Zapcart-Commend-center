@@ -24,14 +24,20 @@ def key_of(email):
     if dom == "zapcart.qa": return ""
     return dom
 
+def _never_contact():
+    """The never-contact list is business-confidential, so it is NOT in this repository.
+    Put it in backfill/never_contact.json: {"contains": ["..."], "exact": ["..."],
+    "domains_except": {"example.net": ["allowed.person@example.net"]}, "hands_off_contains": ["..."]}"""
+    f = os.path.join(BF, "never_contact.json")
+    return json.load(open(f, encoding="utf-8")) if os.path.exists(f) else {}
+NC = _never_contact()
+
 def dnc_of(k, contacts):
-    if "hubx" in k: return "On the never-contact list (HUBX)."
-    if "toptruly" in k: return "On the never-contact list (Toptruly)."
-    if k in ("uaepc.com", "zainc.org", "airserial@yeah.net"): return "On the never-contact list."
-    if k == "mindware.net" or k.endswith(".mindware.net"):
-        return "Mindware: only a.hegde@mindware.net may be contacted. Everyone else is on the never-contact list."
-    if "hukb" in k and any("faris" in (c.get("name", "") + c.get("email", "")).lower() for c in contacts):
-        return "Faris at HUKB is on the never-contact list."
+    if any(x in k for x in NC.get("contains", [])) or k in NC.get("exact", []):
+        return "On the never-contact list."
+    for dom, allowed in (NC.get("domains_except") or {}).items():
+        if k == dom or k.endswith("." + dom):
+            return "Only %s may be contacted here. Everyone else is on the never-contact list." % ", ".join(allowed)
     return ""
 
 orgs = json.load(open(os.path.join(BF, "orgs.json"), encoding="utf-8"))
@@ -122,7 +128,7 @@ for k, o in orgs.items():
     if ph: doc["phone"] = ph
     note = dnc_of(k, o["contacts"])
     if note: doc.update(dnc=True, note=note, state="")
-    if "dp365" in k: doc.update(hold=True, note="RTX PRO 6000 x20 (Josh / dp365) threads are hands-off: Farhan only.")
+    if any(x in k for x in NC.get("hands_off_contains", [])): doc.update(hold=True, note="Hands-off: the owner handles this company personally.")
     for e in sorted(ev_by.get(k, []), key=lambda e: e["date"]):
         if e["type"] == "nda": doc["nda"] = dict(s="on record", at=e["date"], note=e["subject"][:140])
         elif e["type"] == "registration": doc["reg"] = dict(s="on record", at=e["date"], note=e["subject"][:140])
