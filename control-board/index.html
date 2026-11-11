@@ -155,7 +155,7 @@ var db=null,canWrite=null,rows=[],agents=[],loaded=false,agLoaded=false;
 var stale=false,lastAt=null,pop=null,timer=null;
 var view="do",filt="all",open={};
 var cat=null,catState="idle",qv="";
-var rec={tab:"co",q:"",role:"all",co:null,st:"idle",act:null,cmp:null,docs:null,sub:false,open:{}};
+var rec={tab:"co",q:"",role:"all",co:null,st:"idle",act:null,cmp:null,docs:null,setup:null,sub:false,open:{}};
 
 /* lighting: auto -> light -> dark */
 var TH=["auto","light","dark"],ti=0;
@@ -363,6 +363,9 @@ function subRec(){
   db.collection("compliance").onSnapshot(function(sn){
     rec.cmp=sn.docs.map(function(d){var o=Object.assign({},d.data());o.id=d.id;return o});
     if(view==="rec")drawRec()},function(){if(!rec.cmp)rec.cmp=[];if(view==="rec")drawRec()});
+  db.doc("meta/setup").onSnapshot(function(sn){
+    var b=sn.exists?sn.data():null;rec.setup=(b&&b.items)||[];rec.setupBy=b&&b.by||"";
+    if(view==="rec")drawRec()},function(){if(!rec.setup)rec.setup=[];if(view==="rec")drawRec()});
   db.collection("docs").onSnapshot(function(sn){
     rec.docs=sn.docs.map(function(d){var o=Object.assign({},d.data());o.id=d.id;return o});
     if(view==="rec")drawRec()},function(){if(!rec.docs)rec.docs=[];if(view==="rec")drawRec()});
@@ -423,6 +426,8 @@ function drawCo(host){
   var n=function(f){return all.filter(f).length};
   var isS=function(c){return c.role==="supplier"||c.role==="both"},isC=function(c){return c.role==="customer"||c.role==="both"};
   var isP=function(c){return c.role==="prospect"};
+  /* a customer with real history (they wrote to us, or there is paper in Zoho Books) not contacted for 45 days */
+  var isQ=function(c){return isC(c)&&!c.dnc&&(c.n_in>0||c.zoho)&&days(c.last)!=null&&days(c.last)>45};
   var isT=function(c){return isS(c)||isC(c)||c.role==="platform"||c.role==="logistics"};
   var isO=function(c){return !isT(c)&&!isP(c)};
   var st=el("div","stat");
@@ -431,7 +436,7 @@ function drawCo(host){
       sp.appendChild(document.createTextNode(x[0]));st.appendChild(sp)});
   host.appendChild(st);
   var rs=el("div","seg");
-  [["all","All"],["sup","Suppliers"],["cus","Customers"],["us","Waiting on us"],["oth","Other"],["pro","Prospects"]].forEach(function(f){
+  [["all","All"],["sup","Suppliers"],["cus","Customers"],["us","Waiting on us"],["quiet","Quiet customers"],["oth","Other"],["pro","Prospects"]].forEach(function(f){
     var c=el("button","chip",f[1]);c.type="button";c.setAttribute("aria-pressed",String(rec.role===f[0]));
     c.onclick=function(){rec.role=f[0];drawRec()};rs.appendChild(c)});
   host.appendChild(rs);
@@ -444,10 +449,12 @@ function drawCo(host){
     if(rec.role==="cus"&&!isC(c))return false;
     if(rec.role==="oth"&&!isO(c))return false;
     if(rec.role==="pro"&&!isP(c))return false;
+    if(rec.role==="quiet"&&!isQ(c))return false;
     if(rec.role==="all"&&!isT(c)&&!words.length)return false;
     if(rec.role==="us"&&c.state!=="awaiting_us")return false;
     return words.every(function(w){return c._t.indexOf(w)>-1})});
   if(!set.length){host.appendChild(el("div","rest","Nothing matches."));return}
+  if(rec.role==="quiet")host.appendChild(el("div","warn","Customers who have dealt with Zapcart before and have not heard from us in 45 days or more. Each one is a thread you can reply on to ask for current requirements."));
   host.appendChild(el("div","sec",set.length.toLocaleString()+(set.length===1?" company":" companies")+", newest contact first"));
   set.slice(0,80).forEach(function(c){host.appendChild(coRow(c))});
   if(set.length>80)host.appendChild(el("div","rest","Showing the first 80. Type to narrow."));
@@ -521,16 +528,42 @@ function drawDocs(host){
     if(x.url){var b=el("div","bar");b.appendChild(lnk("go",x.url,x.open_label||"Open"));d.appendChild(b)}
     host.appendChild(d)});
 }
+function drawSetup(host){
+  if(!rec.setup){host.appendChild(el("div","rest","Loading\u2026"));return}
+  if(!rec.setup.length){host.appendChild(el("div","rest","The setup check has not been loaded yet."));return}
+  var G=[["needs_owner","Needs you","now"],["not_done","Not done yet","urgent"],["partial","Partly done","decision"],
+         ["not_possible","Not possible as asked \u2014 what is in place instead","high"],["done","Done and checked","sup"]];
+  var st=el("div","stat");
+  G.forEach(function(g){var n=rec.setup.filter(function(x){return x.status===g[0]}).length;
+    var sp=el("span");sp.appendChild(el("b",null,String(n)));sp.appendChild(document.createTextNode(g[1].split(" \u2014")[0]));st.appendChild(sp)});
+  host.appendChild(st);
+  host.appendChild(el("div","warn","What you asked for across the whole chat, and where each item stands."+(rec.setupBy?" Source: "+rec.setupBy+".":"")));
+  G.forEach(function(g){
+    var rows=rec.setup.filter(function(x){return x.status===g[0]});
+    if(!rows.length)return;
+    host.appendChild(el("div","sec",g[1]+" \u00b7 "+rows.length));
+    rows.sort(function(a,b){return String(a.topic||"").localeCompare(String(b.topic||""))}).forEach(function(x){
+      var d=el("div","r "+(g[0]==="done"?"cus":g[2]));
+      var hd=el("div","hd");hd.tabIndex=0;hd.setAttribute("role","button");
+      hd.appendChild(el("span","t",x.need||x.id));hd.appendChild(el("span","age",x.topic||""));
+      var tg=function(){rec.open["s"+x.id]=!rec.open["s"+x.id];drawRec()};
+      hd.onclick=tg;hd.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();tg()}};
+      d.appendChild(hd);
+      if(x.owner_action&&!rec.open["s"+x.id]){var one=el("div","nx");one.appendChild(el("b",null,"You: "));
+        one.appendChild(document.createTextNode(x.owner_action));d.appendChild(one)}
+      if(rec.open["s"+x.id]){var dl=el("dl","kv");kv(dl,"Checked",x.evidence);kv(dl,"Missing",x.gap);kv(dl,"You",x.owner_action);d.appendChild(dl)}
+      host.appendChild(d)})});
+}
 function drawRec(){
   var seg=document.getElementById("rseg");seg.replaceChildren();
-  [["co","Companies"],["ob","Onboarding"],["log","Log"],["gpu","GPU files"],["docs","Documents"]].forEach(function(x){
+  [["co","Companies"],["ob","Onboarding"],["log","Log"],["gpu","GPU files"],["docs","Documents"],["setup","Setup check"]].forEach(function(x){
     var c=el("button","chip",x[1]);c.type="button";c.setAttribute("aria-pressed",String(rec.tab===x[0]));
     c.onclick=function(){rec.tab=x[0];drawRec()};seg.appendChild(c)});
   document.getElementById("rq").hidden=rec.tab!=="co";
   var host=document.getElementById("rres");host.replaceChildren();
   if(!db){host.appendChild(el("div","warn","Records need the live connection. Reopen the board when you are online."));return}
   if(rec.tab==="co")drawCo(host);else if(rec.tab==="ob")drawOb(host);else if(rec.tab==="log")drawLog(host);
-  else if(rec.tab==="gpu")drawGpu(host);else drawDocs(host);
+  else if(rec.tab==="gpu")drawGpu(host);else if(rec.tab==="setup")drawSetup(host);else drawDocs(host);
 }
 
 function draw(){

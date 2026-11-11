@@ -18,7 +18,8 @@ const data = {
   board: unwrap(load('live2/board')),
   agents: [],
   companies: load('registers/companies'),
-  activity: load('registers/activity'),
+  activity: load("registers/activity"),
+  meta: [{ id: "setup", data: JSON.parse(fs.readFileSync(path.join(BASE, "ledger/meta_setup.json"), "utf8")) }],
   compliance: load('registers_compliance'),
   docs: [{ id: 'nda', data: { label: 'Mutual NDA', kind: 'PDF', order: 1, url: '/_blob/x', note: 'Test note' } }],
 };
@@ -37,7 +38,9 @@ const stub = `
       onSnapshot:function(next){setTimeout(function(){next(snap(rows))},20);return function(){}},
       doc:function(id){return {update:function(){return Promise.resolve()},set:function(){return Promise.resolve()}}}};
     return o}
-  var db={collection:function(n){return q(n,DATA[n]||[])}};
+  var db={collection:function(n){return q(n,DATA[n]||[])},
+    doc:function(path){var a=path.split("/"),r=(DATA[a[0]]||[]).filter(function(x){return x.id===a[1]})[0];
+      return {onSnapshot:function(next){setTimeout(function(){next({exists:!!r,id:a[1],data:function(){return r&&r.data}})},20);return function(){}}}}};
   window.claude={use:function(n){return Promise.resolve(n==="db"?db:n==="user"?{can:function(){return true}}:null)}};
 })();
 </script>`;
@@ -66,7 +69,7 @@ fs.writeFileSync(file, doc);
     }
     await page.fill('#rq', 'seagate'); await page.waitForTimeout(100);
     await page.fill('#rq', '');
-    for (const t of ['Onboarding', 'Log', 'GPU files', 'Documents']) {
+    for (const t of ['Onboarding', 'Log', 'GPU files', 'Documents', 'Setup check']) {
       await page.locator('#rseg .chip', { hasText: t }).click(); await page.waitForTimeout(150);
       await page.screenshot({ path: path.join(OUT, name + '-' + t.toLowerCase().replace(/\W+/g, '') + '.png') });
       if (t === 'GPU files') { const g = page.locator('#rres .r .hd').first(); if (await g.count()) { await g.click(); await page.waitForTimeout(100); await page.screenshot({ path: path.join(OUT, name + '-gpu-open.png') }); } }
