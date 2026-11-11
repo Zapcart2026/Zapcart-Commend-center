@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Zapcart Customer Registration</title>
+<link rel="stylesheet" href="letterhead.css">
+<style>
+  .kv th{width:30%}
+  .kv td{height:5.4mm}
+  .kv td,.kv th{padding:0.8mm 1.6mm;font-size:8pt}
+  h2{margin:2.2mm 0 0.8mm;font-size:8.8pt}
+  .kv{margin:1mm 0 1.4mm}
+  h1{font-size:13pt}
+  .lede{margin-bottom:1.6mm}
+  .grid{display:flex;gap:3mm}
+  .grid>div{flex:1 1 0;min-width:0}
+  .docs{width:100%;border-collapse:collapse;margin:1.6mm 0 2mm}
+  .docs td,.docs th{border:0.3mm solid var(--line);padding:1.1mm 1.8mm;font-size:8.4pt}
+  .docs th{background:#eef3f7;color:var(--navy);text-align:left}
+  .docs .tick{width:12mm;text-align:center}
+  .small{font-size:7.8pt;color:var(--dim)}
+  .sign td{padding:1.4mm}
+  .ln{height:4.6mm}
+  .note{margin:1.4mm 0;padding:1.2mm 2mm}
+</style>
+</head><body>
+
+<h1>Customer Registration</h1>
+<p class="lede">Please complete and return with the documents listed. We need this once, before your first
+order is invoiced.</p>
+
+<h2>1. Company</h2>
+<table class="kv">
+  <tr><th>Registered company name</th><td></td></tr>
+  <tr><th>Commercial registration / company no.</th><td></td></tr>
+  <tr><th>Tax / VAT registration no.</th><td></td></tr>
+  <tr><th>Country &amp; city</th><td></td></tr>
+  <tr><th>Registered address</th><td></td></tr>
+  <tr><th>Delivery address <span class="small">(if different)</span></th><td></td></tr>
+</table>
+
+<h2>2. Contacts</h2>
+<table class="kv">
+  <tr><th>Purchasing contact — name &amp; title</th><td></td></tr>
+  <tr><th>Email &amp; phone</th><td></td></tr>
+  <tr><th>Accounts contact for invoices — name</th><td></td></tr>
+  <tr><th>Email &amp; phone</th><td></td></tr>
+</table>
+
+<h2>3. Commercial</h2>
+<table class="kv">
+  <tr><th>Agreed payment terms</th><td class="small">As quoted. Zapcart's standard terms are 100% advance by
+      bank transfer or Fawran. We do not accept card or AMEX.</td></tr>
+  <tr><th>Your bank name &amp; IBAN <span class="small">(for refunds only)</span></th><td></td></tr>
+  <tr><th>Purchase order required before invoice?</th><td class="small">Yes &nbsp;/&nbsp; No &nbsp;—&nbsp; PO format:</td></tr>
+</table>
+
+<h2>4. End use declaration</h2>
+<p class="small" style="margin:0 0 1mm">Required for all orders. Data-centre GPUs and AI accelerators are export-controlled; we cannot ship without this.</p>
+<table class="kv">
+  <tr><th>Named end user <span class="small">(if not your company)</span></th><td></td></tr>
+  <tr><th>Country of final destination</th><td></td></tr>
+  <tr><th>Intended end use</th><td></td></tr>
+  <tr><th>Will the goods be re-exported?</th><td class="small">No &nbsp;/&nbsp; Yes — destination country:</td></tr>
+</table>
+<p class="small" style="margin:0 0 1mm">The customer confirms the goods will not be supplied to, or used in, any country or by any party subject to applicable sanctions, and that the information above is accurate. Zapcart may decline or suspend any order pending an export check.</p>
+
+<h2>5. Documents to attach</h2>
+<table class="docs">
+  <tr><th class="tick">✓</th><th>Document</th><th class="tick">✓</th><th>Document</th></tr>
+  <tr><td></td><td>Trade licence / commercial registration</td><td></td><td>Tax or VAT certificate</td></tr>
+  <tr><td></td><td>Authorised signatory ID</td><td></td><td>Bank / IBAN certificate <span class="small">(if refunds expected)</span></td></tr>
+</table>
+
+<table class="sign avoid">
+  <tr><td class="hd" colspan="2">Confirmed on behalf of the customer</td></tr>
+  <tr>
+    <td>Name: <span class="ln"></span>Title: <span class="ln"></span></td>
+    <td>Signature &amp; company stamp: <span class="ln"></span>Date: <span class="ln"></span></td>
+  </tr>
+</table>
+
+<div class="note">Return to <strong>sales@zapcart.qa</strong>. Your details are used only to process and
+deliver your orders and to meet our legal and export-control obligations.</div>
+
+</body></html>

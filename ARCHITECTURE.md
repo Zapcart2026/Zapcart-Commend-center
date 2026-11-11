@@ -51,6 +51,33 @@ Each prompt was written and then checked by three independent reviewers against
 three lenses: *can this send email*, *does it carry the export rules*, and *is it
 scoped to its own mandate*. Anything a lens rejected was rewritten.
 
+## The records
+
+Since 11 Nov 2026 the Control Board database is also the company register, and the
+Dispatcher is its record keeper. Nobody types anything in.
+
+| Collection | What it holds |
+|---|---|
+| `companies` | One document per outside organisation, keyed by email domain: role, contacts, what they sell or buy, first and last contact, who wrote last, NDA and registration status, Zoho Books summary, never-contact and hands-off flags |
+| `activity` | The log: every RFQ, offer, quotation, order, invoice, payment, dispute, NDA, registration and end-user form |
+| `compliance` | One end-user file per NVIDIA data-centre deal: what was stated to whom, which forms went out, and every contradiction |
+| `docs` | The documents Farhan attaches by hand: NDA, customer registration form, company profile |
+
+It was seeded from six months of mail and Zoho Books (see `tools/mail-backfill/`). Each hour
+the Dispatcher reads what arrived and what the three mailboxes sent, updates the company,
+logs what happened, prepares an NDA draft for each new trading partner and a registration
+form once a quotation is approved, and refuses to draft any GPU email whose end-user details
+differ from the deal's file. `ops/supplier_index` in the company database is a one-document
+list of every supplier that has actually answered, which the RFQ sweep reads before it looks
+for strangers.
+
+The Outlook connector cannot attach files, so NDA and registration emails are drafts that
+Farhan sends after attaching the PDF from Records, Documents — or, once share links are stored
+in `ops/assets`, emails that carry the link.
+
+The source of the board page is `control-board/index.html`; the document templates are in
+`documents/` (the signature and stamp image is deliberately not in the repository).
+
 ## The three layers
 
 1. **Control surface** — the Control Board, reachable from any phone or PC:
