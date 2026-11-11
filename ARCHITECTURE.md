@@ -34,6 +34,39 @@ emails that went out with unfilled `[__ cores]` placeholders, and export-control
 GPU RFQs leaving the building. One sender, many watchers is the rule that prevents
 a repeat.
 
+## Mail seen within 15 minutes
+
+A cloud scheduled task cannot run more often than hourly, so the cadence is built
+from four staggered tasks instead of one fast one:
+
+| Minute | Who | What it does |
+|---|---|---|
+| :05, :35, :50 | Mail Watch (one persistent session, three hourly tasks) | Reads the three inboxes for anything new, puts each real business email on the board as a `mail-…` row, never writes email |
+| :20 | Operations Dispatcher | The full hourly run: replies, follow-ups, sweep, audit, records |
+
+When the watch finds urgent mail (an RFQ, a PO, a payment, a supplier answering
+with price or stock, a dispute) it starts the Dispatcher early with a
+`PRIORITY RUN` message. That run does one thing: drafts the reply on the last
+email of the thread and puts the draft's link on the same board row. The watch
+keeps its state in the board database (`meta/watch`), and the board's Agents tab
+shows when it last checked.
+
+## Files on drafts
+
+The Outlook connector creates and edits drafts but has no way to attach a file.
+Two routes cover that, and the first always applies:
+
+1. **Save buttons.** A board row whose draft needs a document carries
+   `files: ["nda"]` (ids from the `docs` collection). The board lists the file
+   names and shows a Save button for each beside "Open the draft".
+2. **The attach tool** (`tools/graph-attach/attach.py`). When three environment
+   variables exist (`MS_TENANT_ID`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET`, from an
+   Entra app with the application permission `Mail.ReadWrite`), the Dispatcher
+   adds the file to the draft itself through Microsoft Graph and marks the row
+   `files_attached`. The tool refuses anything that is not a draft and has no
+   permission to send. `test_attach.py` exercises it against a local stand-in
+   for Microsoft's endpoints.
+
 ## The cloud watch agents
 
 | Agent | Cadence | Job |
