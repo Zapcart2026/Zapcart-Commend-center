@@ -183,10 +183,12 @@ function copy(s,w){try{navigator.clipboard.writeText(s).then(function(){toast(w+
 function lnk(c,h,x){var a=el("a","b "+c,x);a.href=h;a.target="_blank";a.rel="noopener";return a}
 /* company documents: hand the real file to the device so it can be attached to the open draft */
 function docOf(id){var a=rec.docs||[];for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i];return null}
-function docFile(x){return x.file||((x.label||x.id)+"."+String(x.kind||"pdf").toLowerCase())}
+function savable(x){return !!(x&&x.url&&x.url.charAt(0)==="/")}
+function docFile(x){if(x.file)return x.file;var ext=savable(x)?(String(x.kind||"pdf").toLowerCase()==="png"?"png":"pdf"):"";
+  return (x.label||x.id)+(ext?"."+ext:"")}
 function saveDoc(x){
   if(!x||!x.url)return;
-  if(!dl||x.url.charAt(0)!=="/"){window.open(x.url,"_blank","noopener");return}
+  if(!dl||!savable(x)){window.open(x.url,"_blank","noopener");return}
   toast("Getting "+docFile(x)+"…");
   fetch(x.url).then(function(r){if(!r.ok)throw new Error("fetch");return r.blob()})
     .then(function(b){return dl.save({filename:docFile(x),data:b})})
@@ -238,12 +240,20 @@ function row(r,isDone){
     bar.appendChild(bk);d.appendChild(bar);return d;
   }
   if(r.open_url)bar.appendChild(lnk("go",r.open_url,r.open_label||"Open"));
-  var fs=(r.files||[]).map(docOf).filter(function(x){return x&&x.url});
-  if(fs.length){
-    var at=el("div","nx");
-    at.appendChild(el("b",null,r.files_attached?"Already attached to the draft: ":"Attach before sending: "));
-    at.appendChild(document.createTextNode(fs.map(docFile).join(", ")));d.appendChild(at);
-    fs.forEach(function(x){bar.appendChild(fileBtn(x,"Save "+(x.short||x.label||x.id)))});
+  var ids=Array.isArray(r.files)?r.files:(typeof r.files==="string"&&r.files?[r.files]:[]);
+  if(ids.length){
+    var fs=[],missing=[];
+    ids.forEach(function(id){var x=docOf(id);if(x&&x.url)fs.push(x);else missing.push(id)});
+    if(fs.length){
+      var at=el("div","nx");
+      at.appendChild(el("b",null,r.files_attached?"Already attached to the draft: ":"Attach before sending: "));
+      at.appendChild(document.createTextNode(fs.map(docFile).join(", ")));d.appendChild(at);
+      fs.forEach(function(x){
+        if(dl&&savable(x))bar.appendChild(fileBtn(x,"Save "+(x.short||x.label||x.id)));
+        else bar.appendChild(lnk("",x.url,"Open "+(x.short||x.label||x.id)));
+      });
+    }
+    if(missing.length){var mw0=el("div","nx warn");mw0.textContent="Document not on file: "+missing.join(", ")+" — open Records, Documents";d.appendChild(mw0)}
   }
   if(r.phone&&wa(r.phone))bar.appendChild(lnk("","https://wa.me/"+wa(r.phone),"WhatsApp"));
   var dn=el("button","b ok","Done");dn.type="button";
@@ -545,7 +555,7 @@ function drawDocs(host){
     hd.appendChild(el("span","age",x.kind||""));d.appendChild(hd);
     if(x.note)d.appendChild(el("div","nx",x.note));
     if(x.url){var b=el("div","bar");b.appendChild(lnk("go",x.url,x.open_label||"Open"));
-      if(dl&&x.url.charAt(0)==="/")b.appendChild(fileBtn(x,"Save to this device"));
+      if(dl&&savable(x))b.appendChild(fileBtn(x,"Save to this device"));
       d.appendChild(b)}
     host.appendChild(d)});
 }
@@ -621,14 +631,17 @@ function draw(){
   if(view==="agents"){
     if(!agLoaded){host.appendChild(el("div","rest","Loading agents"));return}
     if(watch&&watch.last_tick){var wa0=ago(watch.last_tick);
-      host.appendChild(el("div","rest","Mail watch: last check "+(wa0==="now"?"just now":wa0+" ago")+
+      var mins=(Date.now()-new Date(watch.last_tick).getTime())/6e4;
+      var stale0=!isFinite(mins)||mins>25;
+      host.appendChild(el("div","rest"+(stale0?" warn":""),(stale0?"Mail watch may be stopped — last check ":"Mail watch: last check ")+
+        (wa0==="now"?"just now":wa0+" ago")+
         (watch.last_result?" — "+watch.last_result:"")+". It checks the three inboxes at minutes 05, 20, 35 and 50 of every hour."))}
     var order={stop:0,create:1,running:2,off:3};
-    agents.slice().sort(function(a,b){
+    var alist=agents.slice().sort(function(a,b){
       return ((order[a.state]==null?9:order[a.state])-(order[b.state]==null?9:order[b.state]))
         ||String(a.name||"").localeCompare(String(b.name||""))});
     var grp=null;
-    agents.forEach(function(a){
+    alist.forEach(function(a){
       var g=a.state==="stop"?"Delete or stop":a.state==="create"?"To create":a.state==="running"?"Running":"Idle";
       if(g!==grp){grp=g;host.appendChild(el("div","sec",g))}
       host.appendChild(agRow(a));
